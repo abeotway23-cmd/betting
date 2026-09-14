@@ -19,7 +19,7 @@ def get_live_odds(league):
     try:
         api_key = st.secrets.get("SPORTS_API_KEY", "DEMO_KEY")
         response = requests.get(
-            f"https://api.example.com/odds?league={league}&key={api_key}",
+            f"https://api-sports.io",
             timeout=5,
         )
         response.raise_for_status()
