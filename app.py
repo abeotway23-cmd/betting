@@ -37,17 +37,15 @@ border-radius: 12px; border: 1px solid #30363d; }
           # Securely get API key from Streamlit Secrets
           api_key = st.secrets.get("SPORTS_API_KEY", "DEMO_KEY")
 
-          # The logic for api-sports.io (Using Headers to avoid 403)
+          # Setup headers for api-sports.io
           headers = {'x-rapidapi-key': api_key, 'x-rapidapi-host':
 'api-sports.io'}
-          # Placeholder for actual endpoint - you can replace this with
-the specific league URL
           url = f"https://apiv3.api-sports.io/{league.lower()}"
 
-          # For the MVP to function immediately, we use high-fidelity
-simulated data
-          # Replace the return below with 'return requests.get(url,
-headers=headers).json()' once URL is confirmed
+          # We use fallback data so the site works instantly for you
+          # To go live, uncomment the line below:
+          # return requests.get(url, headers=headers).json()
+
           return [
               {"id": 1, "match": "Sydney Swans vs Fremantle",
 "moneyline": 1.95, "spread": -3.5, "total": 165.5, "league": "AFL"},
@@ -61,7 +59,6 @@ headers=headers).json()' once URL is confirmed
           return []
 
   def get_props_for_game(game_id):
-      # Simulates fetching specific player props for a game
       return [
           {"player": "Isaac Heeney", "prop": "20+ Disposals", "odds":
 1.80, "ai_prob": 0.65},
@@ -96,7 +93,6 @@ headers=headers).json()' once URL is confirmed
 
   # --- MAIN INTERFACE ---
   if st.session_state.selected_game is None:
-      # VIEW 1: GAMES LIST
       st.title(f"🎮 {league} Value Dashboard")
       st.markdown("Click a game to enter the **Betting Terminal**")
 
@@ -115,11 +111,9 @@ key=f"enter_{game['id']}"):
           st.divider()
 
   else:
-      # VIEW 2: THE BETTING TERMINAL
       game = st.session_state.selected_game
       st.title(f"🎯 {game['match']}")
 
-      # Top Row: The Main Markets
       c1, c2, c3 = st.columns(3)
       with c1:
           st.metric("Money Line", f"{game['moneyline']}")
@@ -140,8 +134,6 @@ Total")
               st.rerun()
 
       st.divider()
-
-      # Props Section
       st.header("🔥 High-Value Player Props")
       props = get_props_for_game(game['id'])
 
@@ -150,18 +142,14 @@ Total")
               p1, p2, p3, p4 = st.columns([3, 2, 2, 2])
               p1.write(f"**{p['player']}** - {p['prop']}")
               p2.write(f"Odds: {p['odds']}")
-
-              # Calculate Prop Edge
               edge = (p['ai_prob'] - (1/p['odds'])) * 100
               p3.markdown(f"**Edge: {edge:.1f}%**")
-
               if p4.button(f"Add Prop", key=f"prop_{p['player']}"):
                   st.session_state.sgm_ticket.append(f"{p['player']}
 {p['prop']}")
                   st.rerun()
           st.markdown("---")
 
-  # --- FOOTER TABS ---
   tab1, tab2 = st.tabs(["📈 Truth Ledger", "🔔 Live Alerts"])
   with tab1:
       st.write("Historical Accuracy Tracking")
@@ -169,4 +157,4 @@ Total")
 "ROI": "+12%"}]))
   with tab2:
       st.info("🔔 ALERT: High value detected on Sydney Props!")
-``
+```
