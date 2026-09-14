@@ -11,31 +11,56 @@ if "sgm_ticket" not in st.session_state:
 
 
 # --- DATA FETCHING FUNCTION ---
-def get_live_odds(league):
-    """
-    Fetches data from the API.
-    Includes fallback data so the app never crashes.
-    """
-    try:
-        api_key = st.secrets.get("SPORTS_API_KEY", "DEMO_KEY")
-        response = requests.get(
-            f"https://api-sports.io",
-            timeout=5,
-        )
-        response.raise_for_status()
-        data = response.json()
-        if isinstance(data, list) and data:
-            return data
-    except Exception as e:
-        st.warning(f"Falling back to demo odds: {e}")
+```python
+  def get_live_odds(league):
+      try:
+          # 1. Get key from secrets
+          api_key = st.secrets.get("SPORTS_API_KEY", "DEMO_KEY")
 
-    return [
-        {"match": "Sydney Swans vs Fremantle", "odds": 1.95, "ai_prob": 0.62, "market": "Moneyline"},
-        {"match": "Collingwood vs GWS", "odds": 2.10, "ai_prob": 0.58, "market": "Moneyline"},
-        {"match": "Geelong vs Adelaide", "odds": 1.50, "ai_prob": 0.75, "market": "Moneyline"},
-        {"match": "Brisbane vs Hawthorn", "odds": 1.80, "ai_prob": 0.45, "market": "Moneyline"},
-    ]
+          # 2. Set the CORRECT endpoint for the league
+          # Note: api-sports.io uses different URLs for different sports
+          endpoints = {
+              "AFL": "https://apiv3.api-sports.io/afl", # Check your
+specific plan URL
+              "NBA": "https://apiv3.api-sports.io/basketball",
+              "Soccer": "https://v3.football.api-sports.io"
+          }
+          url = endpoints.get(league, "https://apiv3.api-sports.io/afl")
 
+          # 3. Use HEADERS instead of URL parameters (This fixes the 403
+error)
+          headers = {
+              'x-rapidapi-key': api_key,
+              'x-rapidapi-host': 'api-sports.io'
+          }
+
+          params = {'league': league} # Add any other required params
+here
+
+          response = requests.get(url, headers=headers, params=params,
+timeout=5)
+          response.raise_for_status()
+          data = response.json()
+
+          # The API usually returns data inside a 'response' key
+          if "response" in data:
+              return data["response"]
+
+      except Exception as e:
+          st.warning(f"API Connection Issue: {e}. Using demo odds.")
+
+      # FALLBACK DATA
+      return [
+          {"match": "Sydney Swans vs Fremantle", "odds": 1.95,
+"ai_prob": 0.62, "market": "Moneyline"},
+          {"match": "Collingwood vs GWS", "odds": 2.10, "ai_prob": 0.58,
+"market": "Moneyline"},
+          {"match": "Geelong vs Adelaide", "odds": 1.50, "ai_prob":
+0.75, "market": "Moneyline"},
+          {"match": "Brisbane vs Hawthorn", "odds": 1.80, "ai_prob":
+0.45, "market": "Moneyline"},
+      ]
+```
 
 # --- UI LAYOUT ---
 st.title("🚀 EdgeBet AI")
