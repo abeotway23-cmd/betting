@@ -1,4 +1,3 @@
-```python
   import streamlit as st
   import requests
   import pandas as pd
@@ -157,4 +156,3 @@ Total")
 "ROI": "+12%"}]))
   with tab2:
       st.info("🔔 ALERT: High value detected on Sydney Props!")
-```
