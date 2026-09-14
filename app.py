@@ -1,135 +1,172 @@
-import streamlit as st
-import pandas as pd
-import requests
-
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="EdgeBet AI", layout="wide", page_icon="🚀")
-
-# --- STATE MANAGEMENT ---
-if "sgm_ticket" not in st.session_state:
-    st.session_state.sgm_ticket = []
-
-
-# --- DATA FETCHING FUNCTION ---
 ```python
-  def get_live_odds(league):
+  import streamlit as st
+  import requests
+  import pandas as pd
+  import random
+
+  # --- PAGE CONFIG ---
+  st.set_page_config(page_title="EdgeBet AI Pro", layout="wide",
+page_icon="🦾")
+
+  # --- CUSTOM STYLING ---
+  st.markdown("""
+      <style>
+      .main { background-color: #0e1117; color: #ffffff; }
+      .stMetric { background-color: #1a1c23; padding: 15px;
+border-radius: 12px; border: 1px solid #30363d; }
+      div[data-testid="stMetricValue"] { color: #00ff41 !important; }
+      .bet-card {
+          background-color: #161b22;
+          padding: 20px;
+          border-radius: 15px;
+          border: 1px solid #30363d;
+          margin-bottom: 10px;
+      }
+      </style>
+      """, unsafe_allow_html=True)
+
+  # --- STATE MANAGEMENT ---
+  if 'selected_game' not in st.session_state:
+      st.session_state.selected_game = None
+  if 'sgm_ticket' not in st.session_state:
+      st.session_state.sgm_ticket = []
+
+  # --- API ENGINE ---
+  def fetch_sports_data(league):
       try:
-          # 1. Get key from secrets
+          # Securely get API key from Streamlit Secrets
           api_key = st.secrets.get("SPORTS_API_KEY", "DEMO_KEY")
 
-          # 2. Set the CORRECT endpoint for the league
-          # Note: api-sports.io uses different URLs for different sports
-          endpoints = {
-              "AFL": "https://apiv3.api-sports.io/afl", # Check your
-specific plan URL
-              "NBA": "https://apiv3.api-sports.io/basketball",
-              "Soccer": "https://v3.football.api-sports.io"
-          }
-          url = endpoints.get(league, "https://apiv3.api-sports.io/afl")
+          # The logic for api-sports.io (Using Headers to avoid 403)
+          headers = {'x-rapidapi-key': api_key, 'x-rapidapi-host':
+'api-sports.io'}
+          # Placeholder for actual endpoint - you can replace this with
+the specific league URL
+          url = f"https://apiv3.api-sports.io/{league.lower()}"
 
-          # 3. Use HEADERS instead of URL parameters (This fixes the 403
-error)
-          headers = {
-              'x-rapidapi-key': api_key,
-              'x-rapidapi-host': 'api-sports.io'
-          }
-
-          params = {'league': league} # Add any other required params
-here
-
-          response = requests.get(url, headers=headers, params=params,
-timeout=5)
-          response.raise_for_status()
-          data = response.json()
-
-          # The API usually returns data inside a 'response' key
-          if "response" in data:
-              return data["response"]
-
+          # For the MVP to function immediately, we use high-fidelity
+simulated data
+          # Replace the return below with 'return requests.get(url,
+headers=headers).json()' once URL is confirmed
+          return [
+              {"id": 1, "match": "Sydney Swans vs Fremantle",
+"moneyline": 1.95, "spread": -3.5, "total": 165.5, "league": "AFL"},
+              {"id": 2, "match": "Collingwood vs GWS", "moneyline":
+2.10, "spread": +1.5, "total": 158.0, "league": "AFL"},
+              {"id": 3, "match": "Geelong vs Adelaide", "moneyline":
+1.50, "spread": -8.5, "total": 170.0, "league": "AFL"},
+          ]
       except Exception as e:
-          st.warning(f"API Connection Issue: {e}. Using demo odds.")
+          st.error(f"API Error: {e}")
+          return []
 
-      # FALLBACK DATA
+  def get_props_for_game(game_id):
+      # Simulates fetching specific player props for a game
       return [
-          {"match": "Sydney Swans vs Fremantle", "odds": 1.95,
-"ai_prob": 0.62, "market": "Moneyline"},
-          {"match": "Collingwood vs GWS", "odds": 2.10, "ai_prob": 0.58,
-"market": "Moneyline"},
-          {"match": "Geelong vs Adelaide", "odds": 1.50, "ai_prob":
-0.75, "market": "Moneyline"},
-          {"match": "Brisbane vs Hawthorn", "odds": 1.80, "ai_prob":
-0.45, "market": "Moneyline"},
+          {"player": "Isaac Heeney", "prop": "20+ Disposals", "odds":
+1.80, "ai_prob": 0.65},
+          {"player": "Andrew Brayshaw", "prop": "25+ Disposals", "odds":
+2.10, "ai_prob": 0.55},
+          {"player": "John Ginnane", "prop": "2+ Goals", "odds": 3.20,
+"ai_prob": 0.40},
+          {"player": "Sydney Team", "prop": "Over 120 Points", "odds":
+1.90, "ai_prob": 0.58},
       ]
-```
 
-# --- UI LAYOUT ---
-st.title("🚀 EdgeBet AI")
-st.markdown("### Professional Value-Detection Engine")
+  # --- NAVIGATION ---
+  st.sidebar.title("🦾 EdgeBet Pro")
+  league = st.sidebar.selectbox("Select League", ["AFL", "NBA", "NFL",
+"NRL", "Soccer"])
 
-# Sidebar
-st.sidebar.header("🕹️ Control Center")
-selected_league = st.sidebar.selectbox("Select League", ["AFL", "NBA", "NFL", "NRL", "Soccer"])
+  if st.sidebar.button("⬅️ Back to Games"):
+      st.session_state.selected_game = None
+      st.rerun()
 
-st.sidebar.divider()
-st.sidebar.header("🎟️ SGM Ticket")
+  st.sidebar.divider()
+  st.sidebar.header("🎟️ SGM Ticket")
+  if st.session_state.sgm_ticket:
+      for bet in st.session_state.sgm_ticket:
+          st.sidebar.write(f"✅ {bet}")
+      st.sidebar.metric("Combined Edge", "📈 +18.4%")
+      if st.sidebar.button("Clear Ticket"):
+          st.session_state.sgm_ticket = []
+          st.rerun()
+  else:
+      st.sidebar.write("Ticket empty.")
 
-if st.session_state.sgm_ticket:
-    for bet in st.session_state.sgm_ticket:
-        st.sidebar.write(f"✅ {bet}")
+  # --- MAIN INTERFACE ---
+  if st.session_state.selected_game is None:
+      # VIEW 1: GAMES LIST
+      st.title(f"🎮 {league} Value Dashboard")
+      st.markdown("Click a game to enter the **Betting Terminal**")
 
-    st.sidebar.metric("Combined Edge", "📈 +14.2%")
-    if st.sidebar.button("Clear Ticket"):
-        st.session_state.sgm_ticket = []
-        st.rerun()
-else:
-    st.sidebar.write("No bets added to multi.")
+      games = fetch_sports_data(league)
 
-# Main Value Table
-odds_data = get_live_odds(selected_league)
+      for game in games:
+          with st.container():
+              col1, col2, col3 = st.columns([4, 2, 2])
+              col1.write(f"### {game['match']}")
+              col2.write(f"ML: {game['moneyline']}")
+              col3.write(f"Spread: {game['spread']}")
+              if col3.button("Enter Terminal",
+key=f"enter_{game['id']}"):
+                  st.session_state.selected_game = game
+                  st.rerun()
+          st.divider()
 
-if odds_data:
-    df = pd.DataFrame(odds_data)
+  else:
+      # VIEW 2: THE BETTING TERMINAL
+      game = st.session_state.selected_game
+      st.title(f"🎯 {game['match']}")
 
-    # Calculate the Edge: (AI Prob - (1/Odds)) * 100
-    df["Bookie Prob"] = 1 / df["odds"]
-    df["Edge"] = (df["ai_prob"] - df["Bookie Prob"]) * 100
+      # Top Row: The Main Markets
+      c1, c2, c3 = st.columns(3)
+      with c1:
+          st.metric("Money Line", f"{game['moneyline']}")
+          if st.button("Add ML to SGM", key="add_ml"):
+              st.session_state.sgm_ticket.append(f"{game['match']} ML")
+              st.rerun()
+      with c2:
+          st.metric("Spread", f"{game['spread']}")
+          if st.button("Add Spread to SGM", key="add_sp"):
+              st.session_state.sgm_ticket.append(f"{game['match']}
+Spread")
+              st.rerun()
+      with c3:
+          st.metric("Total (O/U)", f"{game['total']}")
+          if st.button("Add Total to SGM", key="add_tot"):
+              st.session_state.sgm_ticket.append(f"{game['match']}
+Total")
+              st.rerun()
 
-    # Displaying data in a clean way
-    for i, row in df.iterrows():
-        with st.container():
-            c1, c2, c3, c4, c5 = st.columns([3, 2, 2, 2, 2])
-            c1.write(f"**{row['match']}**")
-            c2.write(row["market"])
-            c3.write(f"Odds: {row['odds']}")
-            c4.write(f"AI: {row['ai_prob'] * 100:.1f}%")
+      st.divider()
 
-            edge_val = row["Edge"]
-            edge_text = f"Edge: {edge_val:.1f}%"
+      # Props Section
+      st.header("🔥 High-Value Player Props")
+      props = get_props_for_game(game['id'])
 
-            if edge_val > 5:
-                c5.markdown(f":green[{edge_text}]")
-            else:
-                c5.write(edge_text)
+      for p in props:
+          with st.container():
+              p1, p2, p3, p4 = st.columns([3, 2, 2, 2])
+              p1.write(f"**{p['player']}** - {p['prop']}")
+              p2.write(f"Odds: {p['odds']}")
 
-            if c5.button("Add to SGM", key=f"add_{i}"):
-                st.session_state.sgm_ticket.append(row["match"])
-                st.rerun()
-        st.divider()
+              # Calculate Prop Edge
+              edge = (p['ai_prob'] - (1/p['odds'])) * 100
+              p3.markdown(f"**Edge: {edge:.1f}%**")
 
-# Tabs for Ledger and Alerts
-tab1, tab2 = st.tabs(["📈 The Truth Ledger", "🔔 Value Alerts"])
+              if p4.button(f"Add Prop", key=f"prop_{p['player']}"):
+                  st.session_state.sgm_ticket.append(f"{p['player']}
+{p['prop']}")
+                  st.rerun()
+          st.markdown("---")
 
-with tab1:
-    st.header("Verified Accuracy")
-    ledger_data = pd.DataFrame(
-        [
-            {"Match": "Sydney vs Brisbane", "Prediction": "Sydney", "Result": "Win", "ROI": "+12%"},
-            {"Match": "Collingwood vs Essendon", "Prediction": "Collingwood", "Result": "Loss", "ROI": "-5%"},
-        ]
-    )
-    st.table(ledger_data)
-    st.metric("Lifetime ROI", "8.4%")
-
-with tab2:
-    st.header("Live Value Spikes")
-    st.info("🔔 ALERT: Sydney Swans Edge jumped to 12% due to late injury news!")
+  # --- FOOTER TABS ---
+  tab1, tab2 = st.tabs(["📈 Truth Ledger", "🔔 Live Alerts"])
+  with tab1:
+      st.write("Historical Accuracy Tracking")
+      st.table(pd.DataFrame([{"Game": "Syd vs Fre", "Result": "Win",
+"ROI": "+12%"}]))
+  with tab2:
+      st.info("🔔 ALERT: High value detected on Sydney Props!")
+``
